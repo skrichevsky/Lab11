@@ -1,0 +1,57 @@
+# Lab 11 - 11/21/18
+# Spencer Krichevsky
+```{r}
+library(microbenchmark)
+library(ggplot2)
+```
+
+
+```{r}
+# Question 1/ Write a function that generates numbers from binomial(n, p) distribution using runif() function. Hint: binomial(n, p) random variables can be defined as a sum of n independent Bernoulli(p) random variables.
+set.seed(123)
+bin_gen <- function(x, prob){
+  trials <- runif(x, 0, 1)
+  sum(trials <= prob)
+}
+bin_gen(100, 0.3)
+rbinom(1, 100, 0.3)
+```
+
+```{r}
+# Question 2. Compare performance of your function with rbinom() using microbenchmark() function.
+microbenchmark(bin_gen(100, 0.3), rbinom(1, 100, 0.3))
+# As expected, rbinom() performs faster than the defined function.
+```
+
+```{r}
+# Question 3. Suppose we want to simulate data from a linear regression model: Y_i = beta_0 + beta_1 * X_i + epsilon_i, i=1,...,N where episilon~N(0,3) and X is a covariate tht ranges between 20 and 40. Let beta_0=15 and beta_1=0.4 are known coefficients. Generate data (N=50) from this model with given coefficients. Fit a linear regression model and plot fitted values vs residuals using ggplot() function. Use set.seed() function for reproducibility.
+
+set.seed(123)
+B_0 <- 15
+B_1 <- 0.4
+x <- sample(x=20:40, size=50, replace=TRUE)
+epsilon <- rnorm(n=50, mean=0, sd=3)
+y <- B_0 + B_1*x + epsilon
+Y_linear <- lm(x~y)
+ggplot(aes(x=Y_linear$fitted.values, y=Y_linear$residuals), data=Y_linear) + geom_point()
+```
+
+```{r}
+# question 4. Box-Muller algorithgm: generate U_1 and U_2 two independent uniform(0,1) random variables and set: R=sqrt(-2*log(U_1)) and theta=2*pi*U_2, then X=R*cos(theta) and Y=R*sin(theta) are two independent normal variables. Write a function that generates normal variates using Box-Muller algorithm. Compare simulated data from your function with simulated data from rnorm() function using ggplot(). 
+set.seed(123)
+box_muller <- function(size){
+  U_1 <- runif(n=size/2, min=0, max=1)
+  U_2 <- runif(n=size/2, min=0, max=1)
+  R <- sqrt(-2*log(U_1))
+  theta <- 2*pi*U_2
+  x <- R*cos(theta)
+  Y <- R*sin(theta)
+  data <- c(x, Y)
+  return(data)
+}
+box_gen <- box_muller(1000)
+norm_gen <- rnorm(n=1000, mean=0, sd=1)
+
+ggplot() + geom_density(aes(x=box_gen,fill="red", alpha=0.25)) + geom_density(aes(x=norm_gen, fill="blue", alpha=0.25))
+```
+
